@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3 Lucky Golden Numbers</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background: #fff8e1;
+        margin: 0;
+        padding: 0;
+    }
+    h1 {
+        color: #b71c1c;
+        margin-top: 20px;
+    }
+    #loginSection, #scratchSection {
+        margin-top: 30px;
+    }
+    input {
+        padding: 10px;
+        font-size: 16px;
+        width: 200px;
+        margin-bottom: 10px;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background: #b71c1c;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    canvas {
+        border: 2px solid #b71c1c;
+        border-radius: 10px;
+        margin-top: 20px;
+    }
+</style>
+</head>
+<body>
+
+<h1>🎉 3 Lucky Golden Numbers 🎉</h1>
+
+<div id="loginSection">
+    <input type="tel" id="mobileNumber" placeholder="Enter Mobile Number">
+    <br>
+    <button onclick="startScratch()">Submit</button>
+</div>
+
+<div id="scratchSection" style="display:none;">
+    <canvas id="scratchCanvas" width="300" height="100"></canvas>
+</div>
+
+<script>
+function startScratch() {
+    let mobile = document.getElementById("mobileNumber").value.trim();
+    if (!/^[0-9]{10}$/.test(mobile)) {
+        alert("Please enter a valid 10-digit mobile number");
+        return;
+    }
+
+    // Check localStorage for 24h restriction
+    let lastTime = localStorage.getItem("scratch_" + mobile);
+    if (lastTime) {
+        let diff = Date.now() - parseInt(lastTime);
+        if (diff < 24 * 60 * 60 * 1000) {
+            alert("You can try again after 24 hours.");
+            return;
+        }
+    }
+    localStorage.setItem("scratch_" + mobile, Date.now());
+
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("scratchSection").style.display = "block";
+    initScratch();
+}
+
+function initScratch() {
+    const canvas = document.getElementById("scratchCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Generate random numbers
+    const nums = [
+        Math.floor(Math.random()*10),
+        Math.floor(Math.random()*10),
+        Math.floor(Math.random()*10)
+    ];
+    const text = nums.join("  ");
+
+    // Draw hidden numbers
+    ctx.fillStyle = "#b71c1c";
+    ctx.font = "bold 40px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, canvas.width/2, canvas.height/2);
+
+    // Cover with gray layer
+    ctx.globalCompositeOperation = "destination-over";
+    ctx.fillStyle = "#ccc";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalCompositeOperation = "source-over";
+
+    let isDrawing = false;
+    canvas.addEventListener("mousedown", () => isDrawing = true);
+    canvas.addEventListener("mouseup", () => isDrawing = false);
+    canvas.addEventListener("mousemove", scratch);
+    canvas.addEventListener("touchstart", () => isDrawing = true);
+    canvas.addEventListener("touchend", () => isDrawing = false);
+    canvas.addEventListener("touchmove", scratch);
+
+    function scratch(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX || e.touches[0].clientX) - rect.left;
+        const y = (e.clientY || e.touches[0].clientY) - rect.top;
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.beginPath();
+        ctx.arc(x, y, 15, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+</script>
+
+</body>
+</html>
